@@ -90,6 +90,23 @@
             padding: 0.5rem;
             border-radius: 4px;
             margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .edit-btn, .delete-btn {
+            background-color: #399D6C;
+            border: none;
+            color: white;
+            padding: 0.3rem 0.5rem;
+            margin-left: 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .delete-btn {
+            background-color: #BB5757;
         }
 
         @keyframes fadeIn {
@@ -128,11 +145,6 @@
         const account = new Appwrite.Account(client);
 
         const DATABASE_ID = "66f9e43e00253528c7a8";
-        const FRIENDS_COLLECTION_ID = "66fc597e0027848acf57";
-        const USERS_COLLECTION_ID = "66f9e45d002562334094";
-        const ACTIVITIES_COLLECTION_ID = "6702c39100338b173d15";
-        const GROUP_MEMBERS_COLLECTION_ID = "66ffef8e000e9a26e8bf";
-        const TRANSACTION_COLLECTION_ID = "6702d327003c89118e37";
         const CATEGORY_COLLECTION_ID = "66fc56ec0001a77931b0";
 
         let currentUserId;
@@ -142,7 +154,7 @@
             try {
                 const user = await account.get();
                 currentUserId = user.$id;
-                
+
                 // Get groupId from URL parameters
                 const urlParams = new URLSearchParams(window.location.search);
                 groupId = urlParams.get('groupId');
@@ -172,7 +184,13 @@
             categoryList.innerHTML = '';
             categories.forEach(category => {
                 const li = document.createElement('li');
-                li.textContent = category.categoryName;
+                li.innerHTML = `
+                    <span>${category.categoryName}</span>
+                    <div>
+                        <button class="edit-btn" onclick="editCategory('${category.$id}', '${category.categoryName}')">Edit</button>
+                        <button class="delete-btn" onclick="deleteCategory('${category.$id}')">Delete</button>
+                    </div>
+                `;
                 categoryList.appendChild(li);
             });
         }
@@ -185,7 +203,7 @@
             if (!category) return;
 
             try {
-                const response = await databases.createDocument(DATABASE_ID, CATEGORY_COLLECTION_ID, 'unique()', {
+                await databases.createDocument(DATABASE_ID, CATEGORY_COLLECTION_ID, 'unique()', {
                     categoryName: category,
                     creatorId: currentUserId,
                     groupId: groupId
@@ -196,6 +214,33 @@
             } catch (error) {
                 console.error("Error adding category:", error);
                 alert("Failed to add category. Please try again.");
+            }
+        }
+
+        async function editCategory(categoryId, currentName) {
+            const newCategoryName = prompt("Edit category name:", currentName);
+            if (newCategoryName && newCategoryName.trim()) {
+                try {
+                    await databases.updateDocument(DATABASE_ID, CATEGORY_COLLECTION_ID, categoryId, {
+                        categoryName: newCategoryName.trim(),
+                    });
+                    await getCategories();
+                } catch (error) {
+                    console.error("Error editing category:", error);
+                    alert("Failed to edit category. Please try again.");
+                }
+            }
+        }
+
+        async function deleteCategory(categoryId) {
+            if (confirm("Are you sure you want to delete this category?")) {
+                try {
+                    await databases.deleteDocument(DATABASE_ID, CATEGORY_COLLECTION_ID, categoryId);
+                    await getCategories();
+                } catch (error) {
+                    console.error("Error deleting category:", error);
+                    alert("Failed to delete category. Please try again.");
+                }
             }
         }
 
