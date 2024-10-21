@@ -109,6 +109,10 @@
             background-color: #BB5757;
         }
 
+        .button-group {
+            display: flex;
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -185,7 +189,7 @@
                 const li = document.createElement('li');
                 li.innerHTML = `
                     <span>${category.categoryName}</span>
-                    <div>
+                    <div class="button-group">
                         <button class="edit-btn" onclick="editCategory('${category.$id}', '${category.categoryName}')">Edit</button>
                         <button class="delete-btn" onclick="deleteCategory('${category.$id}')">Delete</button>
                     </div>
